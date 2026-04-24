@@ -29,6 +29,7 @@ vim.keymap.set({ "n", "v", "x" }, "K", "5k")
 vim.keymap.set({ "n", "v" }, "<leader>p", '"0p')
 vim.keymap.set({ "n", "v" }, "<leader>P", '"0P')
 vim.keymap.set("v", "y", "ygv<Esc>")
+vim.keymap.set("v", "<leader>c", '"+y')
 
 -- --- Diffview ---
 vim.keymap.set("n", "<leader>dv", "<cmd>DiffviewOpen<cr>")
