@@ -24,6 +24,17 @@ vim.lsp.config("gopls", {
 
 vim.lsp.enable("gopls")
 
+-- TypeScript / JavaScript (ts_ls)
+-- Install: npm install -g typescript typescript-language-server
+vim.lsp.config("ts_ls", {
+  cmd = { "typescript-language-server", "--stdio" },
+  filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
+  root_markers = { "tsconfig.json", "jsconfig.json", "package.json", ".git" },
+  capabilities = capabilities,
+})
+
+vim.lsp.enable("ts_ls")
+
 -- Hover popup settings
 vim.o.winborder = "rounded"
 vim.diagnostic.config({ float = { border = "rounded" } })
@@ -32,15 +43,23 @@ vim.diagnostic.config({ float = { border = "rounded" } })
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(ev)
     local opts = { buffer = ev.buf }
-    vim.keymap.set("n", "<leader>gd", "<cmd>Telescope lsp_definitions<cr>", opts)
     vim.keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<cr>", opts)
-    vim.keymap.set("n", "<leader>gi", "<cmd>Telescope lsp_implementations<cr>", opts)
-    vim.keymap.set("n", "<leader>gu", "<cmd>Telescope lsp_references<cr>", opts)
-    vim.keymap.set("n", "<leader>gm", vim.lsp.buf.code_action, opts)
-    vim.keymap.set("n", "<leader>ie", vim.diagnostic.open_float, opts)
+    vim.keymap.set("n", "grr", "<cmd>Telescope lsp_references<cr>", opts)
+    vim.keymap.set("n", "gri", "<cmd>Telescope lsp_implementations<cr>", opts)
+    vim.keymap.set("n", "grt", "<cmd>Telescope lsp_type_definitions<cr>", opts)
+    vim.keymap.set("n", "<leader>grr", function()
+      require("telescope.builtin").lsp_references({
+        file_ignore_patterns = { "_test%.go$", "_mock%.go$", "/mock_", "/mocks/", "/mock/" },
+      })
+    end, opts)
+    vim.keymap.set("n", "<leader>gri", function()
+      require("telescope.builtin").lsp_implementations({
+        file_ignore_patterns = { "_test%.go$", "_mock%.go$", "/mock_", "/mocks/", "/mock/" },
+      })
+    end, opts)
     vim.keymap.set("n", "<leader>id", vim.lsp.buf.hover, opts)
-    vim.keymap.set("n", "<leader>ge", vim.diagnostic.goto_next, opts)
-    vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
+    vim.keymap.set("n", "<leader>ie", vim.diagnostic.open_float, opts)
+    vim.keymap.set("n", "<leader>ge", function() vim.diagnostic.jump({ count = 1, float = true }) end, opts)
   end,
 })
 
