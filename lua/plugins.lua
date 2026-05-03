@@ -78,6 +78,7 @@ require("lazy").setup({
       require("toggleterm").setup({
         direction = "float",
         float_opts = { border = "rounded" },
+        auto_scroll = false,
       })
     end,
   },
