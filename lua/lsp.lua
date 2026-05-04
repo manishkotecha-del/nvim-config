@@ -40,22 +40,27 @@ vim.o.winborder = "rounded"
 vim.diagnostic.config({ float = { border = "rounded" } })
 
 -- --- LSP keymaps (set when a client attaches to a buffer) ---
+local noise_patterns = { "_test%.go$", "_mock%.go$", "/mock_", "/mocks/", "/mock/" }
+
+local function noise_filter(item)
+  for _, pat in ipairs(noise_patterns) do
+    if item.file and item.file:find(pat) then return false end
+  end
+  return item
+end
+
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(ev)
     local opts = { buffer = ev.buf }
-    vim.keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<cr>", opts)
-    vim.keymap.set("n", "grr", "<cmd>Telescope lsp_references<cr>", opts)
-    vim.keymap.set("n", "gri", "<cmd>Telescope lsp_implementations<cr>", opts)
-    vim.keymap.set("n", "grt", "<cmd>Telescope lsp_type_definitions<cr>", opts)
+    vim.keymap.set("n", "gd", function() Snacks.picker.lsp_definitions() end, opts)
+    vim.keymap.set("n", "grr", function() Snacks.picker.lsp_references() end, opts)
+    vim.keymap.set("n", "gri", function() Snacks.picker.lsp_implementations() end, opts)
+    vim.keymap.set("n", "grt", function() Snacks.picker.lsp_type_definitions() end, opts)
     vim.keymap.set("n", "<leader>grr", function()
-      require("telescope.builtin").lsp_references({
-        file_ignore_patterns = { "_test%.go$", "_mock%.go$", "/mock_", "/mocks/", "/mock/" },
-      })
+      Snacks.picker.lsp_references({ transform = noise_filter })
     end, opts)
     vim.keymap.set("n", "<leader>gri", function()
-      require("telescope.builtin").lsp_implementations({
-        file_ignore_patterns = { "_test%.go$", "_mock%.go$", "/mock_", "/mocks/", "/mock/" },
-      })
+      Snacks.picker.lsp_implementations({ transform = noise_filter })
     end, opts)
     vim.keymap.set("n", "<leader>id", vim.lsp.buf.hover, opts)
     vim.keymap.set("n", "<leader>ie", vim.diagnostic.open_float, opts)

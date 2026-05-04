@@ -40,16 +40,12 @@ require("lazy").setup({
 
   -- Fuzzy finder
   {
-    "nvim-telescope/telescope.nvim",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      { "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
-      "jmacadie/telescope-hierarchy.nvim",
+    "folke/snacks.nvim",
+    priority = 1000,
+    lazy = false,
+    opts = {
+      picker = {},
     },
-    config = function()
-      require("telescope").load_extension("fzf")
-      require("telescope").load_extension("hierarchy")
-    end,
   },
 
   -- Surround
@@ -164,6 +160,19 @@ require("lazy").setup({
     end,
   },
 
+  -- LSP call hierarchy viewer (telescope is here only for telescope-hierarchy)
+  {
+    "nvim-telescope/telescope.nvim",
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+      "jmacadie/telescope-hierarchy.nvim",
+    },
+    cmd = "Telescope",
+    config = function()
+      require("telescope").load_extension("hierarchy")
+    end,
+  },
+
   -- Statusline
   {
     "nvim-lualine/lualine.nvim",
@@ -196,49 +205,46 @@ require("lazy").setup({
 
 vim.keymap.set("n", "<leader>e", "<cmd>Neotree reveal<cr>")
 
--- Telescope
-local noise_patterns = { "_test%.go$", "_mock%.go$", "/mock_", "/mocks/", "/mock/" }
+-- Snacks picker
+local noise_excludes = { "**/*_test.go", "**/*_mock.go", "**/mock_*", "**/mocks/**", "**/mock/**" }
 
-vim.keymap.set("n", "<leader>ff", "<cmd>Telescope find_files<cr>")
+vim.keymap.set("n", "<leader>ff", function() Snacks.picker.files() end)
 vim.keymap.set("n", "<leader>fF", function()
-  require("telescope.builtin").find_files({ file_ignore_patterns = noise_patterns })
+  Snacks.picker.files({ exclude = noise_excludes })
 end)
-vim.keymap.set("n", "<leader>fs", "<cmd>Telescope buffers<cr>")
-vim.keymap.set("n", "<leader>fg", "<cmd>Telescope live_grep<cr>")
+vim.keymap.set("n", "<leader>fs", function() Snacks.picker.buffers() end)
+vim.keymap.set("n", "<leader>fg", function() Snacks.picker.grep() end)
 vim.keymap.set("n", "<leader>fG", function()
-  require("telescope.builtin").live_grep({ file_ignore_patterns = noise_patterns })
+  Snacks.picker.grep({ exclude = noise_excludes })
 end)
+
 local function find_in_projects(opts)
   opts = opts or {}
   opts.cwd = vim.fn.expand("~/Projects")
-  opts.attach_mappings = function(_, map)
-    map("i", "<cr>", function(prompt_bufnr)
-      local entry = require("telescope.actions.state").get_selected_entry(prompt_bufnr)
-      require("telescope.actions").close(prompt_bufnr)
-      local filepath = vim.fn.expand("~/Projects") .. "/" .. entry[1]
-      -- Find project root (nearest dir with go.mod, go.work, or .git)
-      local dir = vim.fn.fnamemodify(filepath, ":h")
-      while dir ~= "/" do
-        for _, marker in ipairs({ "go.mod", "go.work", ".git", "package.json", "tsconfig.json", "jsconfig.json" }) do
-          if vim.fn.glob(dir .. "/" .. marker) ~= "" then
-            vim.cmd("cd " .. vim.fn.fnameescape(dir))
-            vim.cmd("edit " .. vim.fn.fnameescape(filepath))
-            pcall(vim.cmd, "Neotree dir=" .. vim.fn.fnameescape(dir))
-            return
-          end
+  opts.confirm = function(picker, item)
+    picker:close()
+    if not item then return end
+    local filepath = opts.cwd .. "/" .. item.file
+    local dir = vim.fn.fnamemodify(filepath, ":h")
+    while dir ~= "/" do
+      for _, marker in ipairs({ "go.mod", "go.work", ".git", "package.json", "tsconfig.json", "jsconfig.json" }) do
+        if vim.fn.glob(dir .. "/" .. marker) ~= "" then
+          vim.cmd("cd " .. vim.fn.fnameescape(dir))
+          vim.cmd("edit " .. vim.fn.fnameescape(filepath))
+          pcall(vim.cmd, "Neotree dir=" .. vim.fn.fnameescape(dir))
+          return
         end
-        dir = vim.fn.fnamemodify(dir, ":h")
       end
-      vim.cmd("edit " .. vim.fn.fnameescape(filepath))
-    end)
-    return true
+      dir = vim.fn.fnamemodify(dir, ":h")
+    end
+    vim.cmd("edit " .. vim.fn.fnameescape(filepath))
   end
-  require("telescope.builtin").find_files(opts)
+  Snacks.picker.files(opts)
 end
 
 vim.keymap.set("n", "<leader>fp", function() find_in_projects() end)
 vim.keymap.set("n", "<leader>fP", function()
-  find_in_projects({ file_ignore_patterns = noise_patterns })
+  find_in_projects({ exclude = noise_excludes })
 end)
 
 vim.keymap.set("n", "<leader>ci", "<cmd>Telescope hierarchy incoming_calls<cr>")
