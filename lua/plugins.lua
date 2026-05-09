@@ -74,6 +74,7 @@ require("lazy").setup({
     config = function()
       require("nvim-treesitter").install({
         "go", "gomod", "gosum", "lua", "vim", "vimdoc", "typescript", "tsx", "javascript",
+        "markdown", "markdown_inline",
       })
     end,
   },
@@ -199,6 +200,14 @@ require("lazy").setup({
         },
       })
     end,
+  },
+
+  -- Markdown rendering
+  {
+    "MeanderingProgrammer/render-markdown.nvim",
+    dependencies = { "nvim-treesitter/nvim-treesitter", "nvim-tree/nvim-web-devicons" },
+    ft = { "markdown" },
+    opts = {},
   },
 
   -- Colorscheme (variants: catppuccin-latte, catppuccin-frappe, catppuccin-macchiato, catppuccin-mocha)
