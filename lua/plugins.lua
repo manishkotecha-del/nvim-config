@@ -27,6 +27,11 @@ require("lazy").setup({
         filesystem = {
           follow_current_file = { enabled = true },
           hijack_netrw_behavior = "open_default",
+          filtered_items = {
+            visible = true,
+            hide_dotfiles = false,
+            hide_gitignored = false,
+          },
         },
         window = {
           mappings = {
@@ -44,7 +49,13 @@ require("lazy").setup({
     priority = 1000,
     lazy = false,
     opts = {
-      picker = {},
+      picker = {
+        sources = {
+          files = { hidden = true },
+          smart = { hidden = true },
+          grep = { hidden = true },
+        },
+      },
     },
   },
 
@@ -208,9 +219,9 @@ vim.keymap.set("n", "<leader>e", "<cmd>Neotree reveal<cr>")
 -- Snacks picker
 local noise_excludes = { "**/*_test.go", "**/*_mock.go", "**/mock_*", "**/mocks/**", "**/mock/**" }
 
-vim.keymap.set("n", "<leader>ff", function() Snacks.picker.files() end)
+vim.keymap.set("n", "<leader>ff", function() Snacks.picker.smart() end)
 vim.keymap.set("n", "<leader>fF", function()
-  Snacks.picker.files({ exclude = noise_excludes })
+  Snacks.picker.smart({ exclude = noise_excludes })
 end)
 vim.keymap.set("n", "<leader>fs", function() Snacks.picker.buffers() end)
 vim.keymap.set("n", "<leader>fg", function() Snacks.picker.grep() end)
